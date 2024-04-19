@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk.Worker">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>dotnet-CoreGateway.Worker-b9a88e9a-044c-45b9-b953-e276aa03ddf1</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="InterpolatedLogging.Microsoft.Extensions.Logging" Version="5.1.0" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.0" />
+    <PackageReference Include="Rebus.RabbitMq" Version="9.3.0" />
+    <PackageReference Include="Rebus.ServiceProvider" Version="10.1.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\CoreGateway.Messages\CoreGateway.Messages.csproj" />
+  </ItemGroup>
+</Project>

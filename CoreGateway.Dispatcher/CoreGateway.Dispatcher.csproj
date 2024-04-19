@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk.Worker">
+
+	<PropertyGroup>
+		<TargetFramework>net6.0</TargetFramework>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<UserSecretsId>dotnet-CoreGateway.Dispatcher-d8c7eac7-48a9-4459-bd36-2f24c81c4f1e</UserSecretsId>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Evolve" Version="3.2.0" />
+		<PackageReference Include="InterpolatedLogging.Microsoft.Extensions.Logging" Version="5.1.0" />
+		<PackageReference Include="linq2db" Version="5.4.1" />
+		<PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.0" />
+		<PackageReference Include="Npgsql" Version="8.0.2" />
+		<PackageReference Include="Rebus.RabbitMq" Version="9.3.0" />
+		<PackageReference Include="Rebus.ServiceProvider" Version="10.1.2" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\CoreGateway.Messages\CoreGateway.Messages.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<EmbeddedResource Include="**\*.sql" />
+	</ItemGroup>
+
+</Project>
