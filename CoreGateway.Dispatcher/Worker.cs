@@ -1,10 +1,7 @@
+using CoreGateway.Dispatcher.DataAccess;
 using CoreGateway.Dispatcher.DbModel;
 using CoreGateway.Messages;
-using EvolveDb;
-using LinqToDB;
-using LinqToDB.Data;
 using Microsoft.Extensions.Options;
-using Npgsql;
 using Rebus.Bus;
 
 namespace CoreGateway.Dispatcher
@@ -14,18 +11,19 @@ namespace CoreGateway.Dispatcher
         private readonly ILogger<Worker> _logger;
         private readonly IBus _bus;
         private readonly DispatcherOptions _options;
+        private readonly IDispatcherDataAccess _dataAccess;
 
-        public Worker(ILogger<Worker> logger, IBus bus, IOptions<DispatcherOptions> options)
+        public Worker(ILogger<Worker> logger, IBus bus, IOptions<DispatcherOptions> options, IDispatcherDataAccess dataAccess)
         {
             _logger = logger;
             _bus = bus;
             _options = options.Value;
+            _dataAccess = dataAccess;
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            CreateDatabaseIfNotExists();
-            MigrateDatabase();
+            _dataAccess.PrepareDatabase();
 
             while (!stoppingToken.IsCancellationRequested)
             {
@@ -43,57 +41,48 @@ namespace CoreGateway.Dispatcher
                 MaxRecursionDepth = 4,
             };
 
-            using var db = new CoreGatewayDb(new DataOptions<CoreGatewayDb>(
-                new DataOptions().UsePostgreSQL(_options.StorageConnectionString)));
-
             var filesNames = Directory.EnumerateFiles(_options.ListenDirectory, _options.FileFilter, eo);
+
+            var serverOffset = await _dataAccess.GetServerTime() - DateTime.UtcNow;
 
             foreach (var fileName in filesNames)
             {
                 if (stoppingToken.IsCancellationRequested)
                     break;
 
-                var exists = db.FileToProcesses.Any(x => x.Name == fileName && x.CompletedAt == null);
-                if (exists)
+                var existingFile = await _dataAccess.FindFileToProcess(fileName, stoppingToken);
+
+                // Если файл отложен до момента в будущем, пока пропускаем его.
+                var serverNow = DateTime.UtcNow + serverOffset;
+                if (existingFile != null && existingFile.TryAfter > serverNow)
                     continue;
 
-                var fileToProcess = await db.FileToProcesses
-                    .Value(f => f.Id, () => Guid.NewGuid())
-                    .Value(f => f.Name, fileName)
-                    .Value(f => f.CreatedAt, () => Sql.CurrentTimestamp)
-                    .InsertWithOutputAsync(stoppingToken);
-
-                var time = DateTime.Now;
-                await _bus.Send(new FileToProcessMessage(fileToProcess.Id, fileName));
-                _logger.InterpolatedInformation($"Sent task [{fileToProcess.Id}] to process file [{fileName}]");
+                switch (existingFile)
+                {
+                    // Новый файл.
+                    case null:
+                        var newFile = await _dataAccess.InsertFileToProcess(fileName, stoppingToken);
+                        await _bus.Send(new FileToProcessMessage(newFile.Id, fileName));
+                        _logger.InterpolatedDebug($"Отправка новой задачи [{newFile.Id:id}] на обработку файла [{fileName}]");
+                        break;
+                    // Файл уже обработан. Наверно нужно сделать повторную отправку.
+                    case { Status: FileStatus.Ok }:
+                        _logger.InterpolatedWarning($"Файл {fileName} числится как обработанный, но не удален. Это какой-то косяк.");
+                        break;
+                    // В процессе обработки файла возникла ошибка.
+                    case { Status: FileStatus.Error, TryCount: < 25 }:
+                        var resentFile = await _dataAccess.ResendFileToProcess(existingFile.Id);
+                        await _bus.Send(new FileToProcessMessage(resentFile.Id, fileName));
+                        _logger.InterpolatedWarning($"Повторная отправка задачи [{resentFile.Id:id}] на обработку файла [{fileName}] (попытка {resentFile.TryCount:tryCount}).");
+                        break;
+                    case { Status: FileStatus.Error }:
+                        //_logger.InterpolatedError($"Лимит попыток выполнения задачи [{existingFile.Id:id}] на обработку файла [{fileName}] исчерпан (попытка {existingFile.TryCount:tryCount}).");
+                        break;
+                    case { Status: FileStatus.Waiting }:
+                        // Ожидаем исполнения задачи.
+                        break;
+                }
             }
-        }
-
-        private void CreateDatabaseIfNotExists()
-        {
-            var builder = new NpgsqlConnectionStringBuilder(_options.StorageConnectionString);
-            var dbName = builder.Database ?? throw new InvalidOperationException("Не задано имя БД.");
-            builder.Database = "postgres";
-
-            using var db = new DataConnection(
-                new DataOptions().UsePostgreSQL(builder.ConnectionString));
-
-            if (!db.IsDatabaseExists(dbName))
-                db.CreateDatabase(dbName);
-        }
-
-        private void MigrateDatabase()
-        {
-            using var db = new DataConnection(
-                new DataOptions().UsePostgreSQL(_options.StorageConnectionString));
-
-            var evolve = new Evolve(db.Connection, msg => _logger.LogInformation(msg))
-            {
-                EmbeddedResourceAssemblies = new[] { GetType().Assembly },
-                IsEraseDisabled = true,
-            };
-            evolve.Repair();
-            evolve.Migrate();
         }
     }
 }

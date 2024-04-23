@@ -38,7 +38,8 @@ namespace CoreGateway.Dispatcher.DbModel
 
 		partial void InitDataContext();
 
-		public ITable<FileToProcess> FileToProcesses => this.GetTable<FileToProcess>();
+		public ITable<FileToProcess>        FileToProcesses        => this.GetTable<FileToProcess>();
+		public ITable<FileToProcessHistory> FileToProcessHistories => this.GetTable<FileToProcessHistory>();
 	}
 
 	public static partial class ExtensionMethods

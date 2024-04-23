@@ -19,14 +19,16 @@ namespace CoreGateway.Worker.Handlers
         {
             try
             {
+                //if (Random.Shared.Next(10) < 8)
+                //    throw new InvalidOperationException("Могу сделать только меньшую часть работы.");
                 File.Delete(message.FilePath);
                 await _bus.Reply(new FileProcessedMessage(message.Id, null));
-                _logger.InterpolatedDebug($"File processed: {message.FilePath}.");
+                _logger.InterpolatedDebug($"Задача {message.Id:id} выполнена. Файл обработан: {message.FilePath:fileName}.");
             }
             catch (Exception ex)
             {
                 await _bus.Reply(new FileProcessedMessage(message.Id, ex.Message));
-                _logger.InterpolatedError(ex, $"Error occured while processing file: {message.FilePath}.");
+                _logger.InterpolatedError(ex, $"Не удалось выполнить задачу {message.Id:id}. Файл {message.FilePath:fileName} не обработан.");
             }
         }
     }

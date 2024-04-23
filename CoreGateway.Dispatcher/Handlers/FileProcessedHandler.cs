@@ -1,6 +1,5 @@
-﻿using CoreGateway.Dispatcher.DbModel;
+﻿using CoreGateway.Dispatcher.DataAccess;
 using CoreGateway.Messages;
-using LinqToDB;
 using Microsoft.Extensions.Options;
 using Rebus.Bus;
 using Rebus.Handlers;
@@ -12,40 +11,31 @@ namespace CoreGateway.Dispatcher.Handlers
         private readonly ILogger<FileProcessedHandler> _logger;
         private readonly IBus _bus;
         private readonly DispatcherOptions _options;
-        public FileProcessedHandler(ILogger<FileProcessedHandler> logger, IBus bus, IOptions<DispatcherOptions> options)
+        private readonly IDispatcherDataAccess _dataAccess;
+
+        public FileProcessedHandler(ILogger<FileProcessedHandler> logger, IBus bus, IOptions<DispatcherOptions> options, IDispatcherDataAccess dataAccess)
         {
             _logger = logger;
             _bus = bus;
             _options = options.Value;
+            _dataAccess = dataAccess;
         }
 
         public async Task Handle(FileProcessedMessage message)
         {
-            try
+            switch(message)
             {
-                await using var db = new CoreGatewayDb(
-                    new DataOptions<CoreGatewayDb>(
-                        new DataOptions()
-                            .UsePostgreSQL(_options.StorageConnectionString)
-                            //.UseInterceptor(new MyInterceptor(_logger))
-                            ));
-
-                var updated = await db.FileToProcesses
-                    .Where(f => f.Id == message.Id)
-                    .Set(f => f.CompletedAt, () => Sql.CurrentTimestamp)
-                    .Set(f => f.Error, () => message.Error)
-                    .UpdateWithOutputAsync((del, ins) => ins);
-
-                var u = updated.SingleOrDefault();
-
-                if (u != null)
-                    _logger.InterpolatedDebug($"Task {message.Id} completed, file updated: {u.Name}.");
-                else
-                    _logger.InterpolatedWarning($"Task [{message.Id}] completed, but is not found in DB.");
-            }
-            catch (Exception ex)
-            {
-                throw;
+                //case null:
+                //    _logger.InterpolatedWarning($"Задача [{message.Id:id}] не найдена в БД.");
+                //    break;
+                case { Error: null }:
+                    await _dataAccess.CompleteFileToProcess(message.Id);
+                    _logger.InterpolatedDebug($"Задача {message.Id:id} успешно выполнена.");
+                    break;
+                case { Error: var err }:
+                    var fileToProcess = await _dataAccess.DeferFileToProcess(message.Id, message.Error);
+                    _logger.InterpolatedError($"Задача {message.Id:id} не выполнена, т.к. возникла ошибка: {err}");
+                    break;
             }
         }
     }
