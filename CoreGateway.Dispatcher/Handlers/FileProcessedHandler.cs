@@ -1,4 +1,5 @@
-﻿using CoreGateway.Dispatcher.DataAccess;
+﻿using System.Diagnostics;
+using CoreGateway.Dispatcher.DataAccess;
 using CoreGateway.Messages;
 using Microsoft.Extensions.Options;
 using Rebus.Bus;
@@ -23,19 +24,30 @@ namespace CoreGateway.Dispatcher.Handlers
 
         public async Task Handle(FileProcessedMessage message)
         {
-            switch(message)
+            using var activity = CoreGatewayTraceing.CoreGatewayActivity
+                .StartActivity(ActivityKind.Consumer, name: nameof(FileProcessedHandler));
+            try
             {
-                //case null:
-                //    _logger.InterpolatedWarning($"Задача [{message.Id:id}] не найдена в БД.");
-                //    break;
-                case { Error: null }:
-                    await _dataAccess.CompleteFileToProcess(message.Id);
-                    _logger.InterpolatedDebug($"Задача {message.Id:id} успешно выполнена.");
-                    break;
-                case { Error: var err }:
-                    var fileToProcess = await _dataAccess.DeferFileToProcess(message.Id, message.Error);
-                    _logger.InterpolatedError($"Задача {message.Id:id} не выполнена, т.к. возникла ошибка: {err}");
-                    break;
+                switch (message)
+                {
+                    //case null:
+                    //    _logger.InterpolatedWarning($"Задача [{message.Id:id}] не найдена в БД.");
+                    //    break;
+                    case { Error: null }:
+                        await _dataAccess.CompleteFileToProcess(message.Id);
+                        _logger.InterpolatedDebug($"Задача {message.Id:id} успешно выполнена.");
+                        break;
+                    case { Error: var err }:
+                        var fileToProcess = await _dataAccess.DeferFileToProcess(message.Id, message.Error);
+                        _logger.InterpolatedError($"Задача {message.Id:id} не выполнена, т.к. возникла ошибка: {err}");
+                        break;
+                }
+                activity?.SetStatus(ActivityStatusCode.Ok);
+            }
+            catch (Exception ex)
+            {
+                activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
+                throw;
             }
         }
     }

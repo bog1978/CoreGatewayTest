@@ -1,4 +1,5 @@
-﻿using CoreGateway.Messages;
+﻿using System.Diagnostics;
+using CoreGateway.Messages;
 using Rebus.Bus;
 using Rebus.Handlers;
 
@@ -17,6 +18,8 @@ namespace CoreGateway.Worker.Handlers
 
         public async Task Handle(FileToProcessMessage message)
         {
+            using var activity = CoreGatewayTraceing.CoreGatewayActivity
+                .StartActivity(ActivityKind.Consumer, name: nameof(FileToProcessHandler));
             try
             {
                 //if (Random.Shared.Next(10) < 8)
@@ -24,11 +27,13 @@ namespace CoreGateway.Worker.Handlers
                 File.Delete(message.FilePath);
                 await _bus.Reply(new FileProcessedMessage(message.Id, null));
                 _logger.InterpolatedDebug($"Задача {message.Id:id} выполнена. Файл обработан: {message.FilePath:fileName}.");
+                activity?.SetStatus(ActivityStatusCode.Ok);
             }
             catch (Exception ex)
             {
                 await _bus.Reply(new FileProcessedMessage(message.Id, ex.Message));
                 _logger.InterpolatedError(ex, $"Не удалось выполнить задачу {message.Id:id}. Файл {message.FilePath:fileName} не обработан.");
+                activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
             }
         }
     }

@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using CoreGateway.Dispatcher.DataAccess;
 using CoreGateway.Dispatcher.DbModel;
 using CoreGateway.Messages;
@@ -41,47 +42,67 @@ namespace CoreGateway.Dispatcher
                 MaxRecursionDepth = 4,
             };
 
-            var filesNames = Directory.EnumerateFiles(_options.ListenDirectory, _options.FileFilter, eo);
+            // Если файлов нет, в БД не лезем, чтобы не плодить трэйсы.
+            if (!Directory.EnumerateFiles(_options.ListenDirectory, _options.FileFilter, eo).Any())
+                return;
 
+            var filesNames = Directory.EnumerateFiles(_options.ListenDirectory, _options.FileFilter, eo);
             var serverOffset = await _dataAccess.GetServerTime() - DateTime.UtcNow;
 
             foreach (var fileName in filesNames)
             {
-                if (stoppingToken.IsCancellationRequested)
-                    break;
-
-                var existingFile = await _dataAccess.FindFileToProcess(fileName, stoppingToken);
-
-                // Если файл отложен до момента в будущем, пока пропускаем его.
-                var serverNow = DateTime.UtcNow + serverOffset;
-                if (existingFile != null && existingFile.TryAfter > serverNow)
-                    continue;
-
-                switch (existingFile)
+                using var activity = CoreGatewayTraceing.CoreGatewayActivity
+                    .StartActivity(ActivityKind.Producer)
+                    ?.SetTag("CoreGateway.FileName", fileName);
+                try
                 {
-                    // Новый файл.
-                    case null:
-                        var newFile = await _dataAccess.InsertFileToProcess(fileName, stoppingToken);
-                        await _bus.Send(new FileToProcessMessage(newFile.Id, fileName));
-                        _logger.InterpolatedDebug($"Отправка новой задачи [{newFile.Id:id}] на обработку файла [{fileName}]");
-                        break;
-                    // Файл уже обработан. Наверно нужно сделать повторную отправку.
-                    case { Status: FileStatus.Ok }:
-                        _logger.InterpolatedWarning($"Файл {fileName} числится как обработанный, но не удален. Это какой-то косяк.");
-                        break;
-                    // В процессе обработки файла возникла ошибка.
-                    case { Status: FileStatus.Error, TryCount: < 25 }:
-                        var resentFile = await _dataAccess.ResendFileToProcess(existingFile.Id);
-                        await _bus.Send(new FileToProcessMessage(resentFile.Id, fileName));
-                        _logger.InterpolatedWarning($"Повторная отправка задачи [{resentFile.Id:id}] на обработку файла [{fileName}] (попытка {resentFile.TryCount:tryCount}).");
-                        break;
-                    case { Status: FileStatus.Error }:
-                        //_logger.InterpolatedError($"Лимит попыток выполнения задачи [{existingFile.Id:id}] на обработку файла [{fileName}] исчерпан (попытка {existingFile.TryCount:tryCount}).");
-                        break;
-                    case { Status: FileStatus.Waiting }:
-                        // Ожидаем исполнения задачи.
-                        break;
+                    await ProcessFile(serverOffset, fileName, stoppingToken);
+                    activity?.SetStatus(ActivityStatusCode.Ok);
                 }
+                catch (Exception ex)
+                {
+                    activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
+                    throw;
+                }
+            }
+        }
+
+        private async Task ProcessFile(TimeSpan serverOffset, string fileName, CancellationToken stoppingToken)
+        {
+            if (stoppingToken.IsCancellationRequested)
+                return;
+
+            var existingFile = await _dataAccess.FindFileToProcess(fileName, stoppingToken);
+
+            // Если файл отложен до момента в будущем, пока пропускаем его.
+            var serverNow = DateTime.UtcNow + serverOffset;
+            if (existingFile != null && existingFile.TryAfter > serverNow)
+                return;
+
+            switch (existingFile)
+            {
+                // Новый файл.
+                case null:
+                    var newFile = await _dataAccess.InsertFileToProcess(fileName, stoppingToken);
+                    await _bus.Send(new FileToProcessMessage(newFile.Id, fileName));
+                    _logger.InterpolatedDebug($"Отправка новой задачи [{newFile.Id:id}] на обработку файла [{fileName:fileName}]");
+                    break;
+                // Файл уже обработан. Наверно нужно сделать повторную отправку.
+                case { Status: FileStatus.Ok }:
+                    _logger.InterpolatedWarning($"Файл {fileName} числится как обработанный, но не удален. Это какой-то косяк.");
+                    break;
+                // В процессе обработки файла возникла ошибка.
+                case { Status: FileStatus.Error, TryCount: < 25 }:
+                    var resentFile = await _dataAccess.ResendFileToProcess(existingFile.Id);
+                    await _bus.Send(new FileToProcessMessage(resentFile.Id, fileName));
+                    _logger.InterpolatedWarning($"Повторная отправка задачи [{resentFile.Id:id}] на обработку файла [{fileName:fileName}] (попытка {resentFile.TryCount:tryCount}).");
+                    break;
+                case { Status: FileStatus.Error }:
+                    //_logger.InterpolatedError($"Лимит попыток выполнения задачи [{existingFile.Id:id}] на обработку файла [{fileName}] исчерпан (попытка {existingFile.TryCount:tryCount}).");
+                    break;
+                case { Status: FileStatus.Waiting }:
+                    // Ожидаем исполнения задачи.
+                    break;
             }
         }
     }
