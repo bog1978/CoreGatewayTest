@@ -94,7 +94,7 @@ namespace CoreGateway.Dispatcher
                                 ResourceBuilder
                                     .CreateDefault()
                                     .AddService(serviceName))
-                            .AddConsoleExporter()
+                            //.AddConsoleExporter()
                             .AddOtlpExporter();
                         options.IncludeFormattedMessage = true;
                     }));

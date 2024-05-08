@@ -1,4 +1,4 @@
 ﻿namespace CoreGateway.Messages
 {
-    public record FileProcessedMessage(Guid Id, string? Error);
+    public record FileProcessedMessage(Guid MessageId, Guid? FileGuid, string? Error);
 }

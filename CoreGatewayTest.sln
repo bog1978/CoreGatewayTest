@@ -3,11 +3,15 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.9.34714.143
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CoreGateway.Dispatcher", "CoreGateway.Dispatcher\CoreGateway.Dispatcher.csproj", "{6EFB0B77-48C8-496C-802B-FE8A9541A647}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CoreGateway.Dispatcher", "CoreGateway.Dispatcher\CoreGateway.Dispatcher.csproj", "{6EFB0B77-48C8-496C-802B-FE8A9541A647}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CoreGateway.Worker", "CoreGateway.Worker\CoreGateway.Worker.csproj", "{6A958B4F-C341-4439-B39F-99FF1149437E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CoreGateway.Worker", "CoreGateway.Worker\CoreGateway.Worker.csproj", "{6A958B4F-C341-4439-B39F-99FF1149437E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CoreGateway.Messages", "CoreGateway.Messages\CoreGateway.Messages.csproj", "{A1C9F019-4D7E-4599-A543-E0516503ECAF}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CoreGateway.Messages", "CoreGateway.Messages\CoreGateway.Messages.csproj", "{A1C9F019-4D7E-4599-A543-E0516503ECAF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CoreGateway.Storage.Service", "CoreGateway.Storage.Service\CoreGateway.Storage.Service.csproj", "{3DF92B87-A25B-4239-905F-2A46154EAC8A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CoreGateway.Storage.Client", "CoreGateway.Storage.Client\CoreGateway.Storage.Client.csproj", "{0C0930BC-16F3-4545-AFCF-F04DFB83853D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -27,6 +31,14 @@ Global
 		{A1C9F019-4D7E-4599-A543-E0516503ECAF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A1C9F019-4D7E-4599-A543-E0516503ECAF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A1C9F019-4D7E-4599-A543-E0516503ECAF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3DF92B87-A25B-4239-905F-2A46154EAC8A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3DF92B87-A25B-4239-905F-2A46154EAC8A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3DF92B87-A25B-4239-905F-2A46154EAC8A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3DF92B87-A25B-4239-905F-2A46154EAC8A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0C0930BC-16F3-4545-AFCF-F04DFB83853D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0C0930BC-16F3-4545-AFCF-F04DFB83853D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0C0930BC-16F3-4545-AFCF-F04DFB83853D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0C0930BC-16F3-4545-AFCF-F04DFB83853D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

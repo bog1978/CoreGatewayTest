@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using CoreGateway.Messages;
+using CoreGateway.Storage.Client;
 using Rebus.Bus;
 using Rebus.Handlers;
 
@@ -9,11 +10,13 @@ namespace CoreGateway.Worker.Handlers
     {
         private readonly ILogger<FileToProcessHandler> _logger;
         private readonly IBus _bus;
+        private readonly ICoreGatewayStorage _storage;
 
-        public FileToProcessHandler(ILogger<FileToProcessHandler> logger, IBus bus)
+        public FileToProcessHandler(ILogger<FileToProcessHandler> logger, IBus bus, ICoreGatewayStorage storage)
         {
             _logger = logger;
             _bus = bus;
+            _storage = storage;
         }
 
         public async Task Handle(FileToProcessMessage message)
@@ -22,19 +25,24 @@ namespace CoreGateway.Worker.Handlers
                 .StartActivity(ActivityKind.Consumer, name: nameof(FileToProcessHandler));
             try
             {
-                //if (Random.Shared.Next(10) < 8)
-                //    throw new InvalidOperationException("Могу сделать только меньшую часть работы.");
+                var fileGuid = await SendFile(message.FilePath);
                 File.Delete(message.FilePath);
-                await _bus.Reply(new FileProcessedMessage(message.Id, null));
-                _logger.InterpolatedDebug($"Задача {message.Id:id} выполнена. Файл обработан: {message.FilePath:fileName}.");
+                await _bus.Reply(new FileProcessedMessage(message.MessageId, fileGuid, null));
+                _logger.InterpolatedDebug($"Задача {message.MessageId:cg_taskId} выполнена. Файл обработан: {message.FilePath:cg_fileName}.");
                 activity?.SetStatus(ActivityStatusCode.Ok);
             }
             catch (Exception ex)
             {
-                await _bus.Reply(new FileProcessedMessage(message.Id, ex.Message));
-                _logger.InterpolatedError(ex, $"Не удалось выполнить задачу {message.Id:id}. Файл {message.FilePath:fileName} не обработан.");
+                await _bus.Reply(new FileProcessedMessage(message.MessageId, null, ex.Message));
+                _logger.InterpolatedError(ex, $"Не удалось выполнить задачу {message.MessageId:cg_taskId}. Файл {message.FilePath:cg_fileName} не обработан.");
                 activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
             }
+        }
+
+        private async Task<Guid> SendFile(string filePath)
+        {
+            using var stream = File.OpenRead(filePath);
+            return await _storage.FilePUT(new Refit.StreamPart(stream, filePath));
         }
     }
 }

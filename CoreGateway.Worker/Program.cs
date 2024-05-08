@@ -28,6 +28,7 @@ namespace CoreGateway.Worker
                 services.AddRebus(ConfigureRebus);
                 services.AddTransient<IHandleMessages<FileToProcessMessage>, FileToProcessHandler>();
                 services.ConfigureOTel();
+                services.AddCoreGatewayStorageClient(ctx.Configuration);
             })
             .Build()
             .Run();
@@ -80,7 +81,7 @@ namespace CoreGateway.Worker
                                 ResourceBuilder
                                     .CreateDefault()
                                     .AddService(serviceName))
-                            .AddConsoleExporter()
+                            //.AddConsoleExporter()
                             .AddOtlpExporter();
                         options.IncludeFormattedMessage = true;
                     }));

@@ -34,12 +34,12 @@ namespace CoreGateway.Dispatcher.Handlers
                     //    _logger.InterpolatedWarning($"Задача [{message.Id:id}] не найдена в БД.");
                     //    break;
                     case { Error: null }:
-                        await _dataAccess.CompleteFileToProcess(message.Id);
-                        _logger.InterpolatedDebug($"Задача {message.Id:id} успешно выполнена.");
+                        await _dataAccess.CompleteFileToProcess(message.MessageId);
+                        _logger.InterpolatedDebug($"Задача {message.MessageId:cg_taskId} успешно выполнена.");
                         break;
                     case { Error: var err }:
-                        var fileToProcess = await _dataAccess.DeferFileToProcess(message.Id, message.Error);
-                        _logger.InterpolatedError($"Задача {message.Id:id} не выполнена, т.к. возникла ошибка: {err}");
+                        var fileToProcess = await _dataAccess.DeferFileToProcess(message.MessageId, message.Error);
+                        _logger.InterpolatedError($"Задача {message.MessageId:cg_taskId} не выполнена, т.к. возникла ошибка: {err:cg_error}");
                         break;
                 }
                 activity?.SetStatus(ActivityStatusCode.Ok);

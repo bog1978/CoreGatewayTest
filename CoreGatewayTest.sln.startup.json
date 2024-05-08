@@ -52,10 +52,11 @@
         }
     */
   "MultiProjectConfigurations": {
-    "Dispatcher+Worker": {
+    "Dispatcher+Worker+Storage": {
       "Projects": {
         "CoreGateway.Dispatcher": {},
-        "CoreGateway.Worker": {}
+        "CoreGateway.Worker": {},
+        "CoreGateway.Storage.Service": {}
       }
     }
   }

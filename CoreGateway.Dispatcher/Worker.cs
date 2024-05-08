@@ -85,23 +85,24 @@ namespace CoreGateway.Dispatcher
                 case null:
                     var newFile = await _dataAccess.InsertFileToProcess(fileName, stoppingToken);
                     await _bus.Send(new FileToProcessMessage(newFile.Id, fileName));
-                    _logger.InterpolatedDebug($"Отправка новой задачи [{newFile.Id:id}] на обработку файла [{fileName:fileName}]");
+                    _logger.InterpolatedDebug($"Отправка новой задачи {newFile.Id:cg_taskId} на обработку файла [{fileName:cg_fileName}]");
                     break;
                 // Файл уже обработан. Наверно нужно сделать повторную отправку.
                 case { Status: FileStatus.Ok }:
-                    _logger.InterpolatedWarning($"Файл {fileName} числится как обработанный, но не удален. Это какой-то косяк.");
+                    _logger.InterpolatedWarning($"Файл {fileName:cg_fileName} числится как обработанный, но не удален. Это какой-то косяк.");
                     break;
                 // В процессе обработки файла возникла ошибка.
                 case { Status: FileStatus.Error, TryCount: < 25 }:
                     var resentFile = await _dataAccess.ResendFileToProcess(existingFile.Id);
                     await _bus.Send(new FileToProcessMessage(resentFile.Id, fileName));
-                    _logger.InterpolatedWarning($"Повторная отправка задачи [{resentFile.Id:id}] на обработку файла [{fileName:fileName}] (попытка {resentFile.TryCount:tryCount}).");
+                    _logger.InterpolatedWarning($"Повторная отправка задачи {resentFile.Id:cg_taskId} на обработку файла {fileName:cg_fileName} (попытка {resentFile.TryCount:cg_tryCount}).");
                     break;
                 case { Status: FileStatus.Error }:
-                    //_logger.InterpolatedError($"Лимит попыток выполнения задачи [{existingFile.Id:id}] на обработку файла [{fileName}] исчерпан (попытка {existingFile.TryCount:tryCount}).");
+                    _logger.InterpolatedError($"Лимит попыток выполнения задачи {existingFile.Id:cg_taskId} на обработку файла {fileName:cg_fileName} исчерпан (попытка {existingFile.TryCount:cg_tryCount}).");
                     break;
                 case { Status: FileStatus.Waiting }:
                     // Ожидаем исполнения задачи.
+                    _logger.InterpolatedDebug($"Задача {existingFile.Id:cg_taskId} на обработку файла {fileName:cg_fileName} уже отправлена в очередь.");
                     break;
             }
         }
