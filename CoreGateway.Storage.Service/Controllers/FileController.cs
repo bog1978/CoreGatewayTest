@@ -1,3 +1,4 @@
+using CoreGateway.Dispatcher.DataAccess;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CoreGateway.Storage.Service.Controllers
@@ -7,21 +8,24 @@ namespace CoreGateway.Storage.Service.Controllers
     public class FileController : ControllerBase
     {
         private readonly ILogger<FileController> _logger;
+        private readonly IStorageDataAccess _dataAccess;
 
-        public FileController(ILogger<FileController> logger)
+        public FileController(ILogger<FileController> logger, IStorageDataAccess dataAccess)
         {
             _logger = logger;
+            _dataAccess = dataAccess;
         }
 
         [HttpGet]
         public async Task<ActionResult> GetAsync(Guid fileGuid)
         {
-            var stream = new MemoryStream();
-            stream.Write(new byte[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0 });
-            stream.Position = 0;
+            var fileData = await _dataAccess.GetFile(fileGuid, CancellationToken.None);
+            if (fileData?.Data == null)
+                return base.BadRequest($"Файл [{fileGuid}] не найден.");
+            var stream = new MemoryStream(fileData.Data);
             return File(stream,
                 "application/octet-stream",
-                "some_file.bin");
+                Path.GetFileName(fileData.Name));
         }
 
         [HttpPut]
@@ -31,18 +35,12 @@ namespace CoreGateway.Storage.Service.Controllers
                 return new BadRequestObjectResult(
                     new ArgumentNullException(nameof(data)));
 
-            var buffer = new byte[1024];
-            var totalCount = 0;
+            var ms = new MemoryStream();
             using var stream = data.OpenReadStream();
-            while (true)
-            {
-                var count = await stream.ReadAsync(buffer, 0, buffer.Length);
-                if (count == 0)
-                    break;
-                totalCount += count;
-            }
+            await stream.CopyToAsync(ms, 1024);
 
-            return new ActionResult<Guid>(Guid.NewGuid());
+            var result = await _dataAccess.InsertFile(Guid.NewGuid(), data.FileName, ms.ToArray(), CancellationToken.None);
+            return result.Id;
         }
     }
 }

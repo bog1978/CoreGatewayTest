@@ -63,14 +63,14 @@ namespace CoreGateway.Worker
                     .AddHttpClientInstrumentation()
                     .AddRebusInstrumentation()
                     .AddCoreGatewayInstrumentation()
-                    .AddConsoleExporter()
+                    //.AddConsoleExporter()
                     .AddOtlpExporter())
                 .WithMetrics(metrics => metrics
                     .AddRuntimeInstrumentation()
                     .AddHttpClientInstrumentation()
                     .AddProcessInstrumentation()
                     .AddRebusInstrumentation()
-                    .AddConsoleExporter()
+                    //.AddConsoleExporter()
                     .AddOtlpExporter());
             services.AddLogging(builder =>
                 builder

@@ -1,0 +1,1 @@
+dotnet linq2db scaffold -p PostgreSQL -c "Server=localhost;Port=5432;Database=logic_storage;User Id=postgres;Password=admin;" -n CoreGateway.Storage.Service.DbModel --overwrite true --context-name StorageDb --exclude-tables changelog
