@@ -35,7 +35,7 @@ namespace CoreGateway.Dispatcher.Handlers
                     //    break;
                     case { Error: null }:
                         await _dataAccess.CompleteFileToProcess(message.MessageId);
-                        _logger.InterpolatedDebug($"Задача {message.MessageId:cg_taskId} успешно выполнена.");
+                        _logger.InterpolatedInformation($"Задача {message.MessageId:cg_taskId} успешно выполнена.");
                         break;
                     case { Error: var err }:
                         var fileToProcess = await _dataAccess.DeferFileToProcess(message.MessageId, message.Error);

@@ -1,5 +1,6 @@
 using CoreGateway.Messages;
 using CoreGateway.Worker.Handlers;
+using Microsoft.Extensions.Logging.Console;
 using Microsoft.Extensions.Options;
 using OpenTelemetry.Logs;
 using OpenTelemetry.Metrics;
@@ -24,7 +25,11 @@ namespace CoreGateway.Worker
                 var section = ctx.Configuration.GetRequiredSection(nameof(WorkerOptions));
                 services.AddOptions<WorkerOptions>().Bind(section);
 
-                services.AddLogging(l => l.AddConsole());
+                services.AddLogging(l => l.AddSimpleConsole(o =>
+                {
+                    o.SingleLine = true;
+                    o.ColorBehavior = LoggerColorBehavior.Enabled;
+                }));
                 services.AddRebus(ConfigureRebus);
                 services.AddTransient<IHandleMessages<FileToProcessMessage>, FileToProcessHandler>();
                 services.ConfigureOTel();

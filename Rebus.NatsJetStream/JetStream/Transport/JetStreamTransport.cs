@@ -32,12 +32,11 @@ public class JetStreamTransport : AbstractRebusTransport, IInitializable, IDispo
         _natsJsContext = new NatsJSContext(_natsConnection);
         _rebusTime = rebusTime ?? throw new ArgumentNullException(nameof(rebusTime));
         _log = rebusLoggerFactory.GetLogger<JetStreamTransport>();
-        Address = Normalize(inputQueueName);
     }
 
     protected override async Task SendOutgoingMessages(IEnumerable<OutgoingTransportMessage> outgoingMessages, ITransactionContext context)
     {
-        foreach(var msg in outgoingMessages)
+        foreach (var msg in outgoingMessages)
             await InternalSend(msg.DestinationAddress, msg.TransportMessage, context);
     }
 
@@ -45,8 +44,6 @@ public class JetStreamTransport : AbstractRebusTransport, IInitializable, IDispo
     {
         CreateQueue(Address);
     }
-
-    public string Address { get; }
 
     public override void CreateQueue(string address)
     {
@@ -71,7 +68,10 @@ public class JetStreamTransport : AbstractRebusTransport, IInitializable, IDispo
         var headers = new NatsHeaders();
         foreach (var h in message.Headers)
             headers.Add(h.Key, h.Value);
-        var ack = await _natsJsContext.PublishAsync(Normalize(destinationAddress) + ".new", message.Body, headers: headers);
+        var ack = await _natsJsContext.PublishAsync(
+            Normalize(destinationAddress) + ".new",
+            message.Body,
+            headers: headers);
         context.OnCommit(ctx => Task.Run(ack.EnsureSuccess));
         context.OnAck(ctx => Task.CompletedTask);
         context.OnNack(ctx => Task.CompletedTask);
@@ -85,10 +85,9 @@ public class JetStreamTransport : AbstractRebusTransport, IInitializable, IDispo
         TransportMessage? tm = null;
         while (!cancellationToken.IsCancellationRequested)
         {
-            var msg = await consumer.NextAsync<byte[]>();
+            var msg = await consumer.NextAsync<byte[]>(cancellationToken: cancellationToken);
             if (msg is { } m)
             {
-                _log.Warn($"Сообщение получено.");
                 var headers = new Dictionary<string, string>();
                 if (m.Headers != null)
                     foreach (var h in m.Headers)
@@ -101,10 +100,6 @@ public class JetStreamTransport : AbstractRebusTransport, IInitializable, IDispo
                 context.OnRollback(ctx => Task.CompletedTask);
                 break;
             }
-            else
-            {
-                _log.Warn($"Сообщение не получено.");
-            }
         }
 
         return tm;
@@ -114,8 +109,8 @@ public class JetStreamTransport : AbstractRebusTransport, IInitializable, IDispo
     {
         if (_consumer == null)
         {
-            var config = new ConsumerConfig(Address);
-            _consumer = await _natsJsContext.CreateOrUpdateConsumerAsync(Address, config);
+            var config = new ConsumerConfig(Normalize(Address));
+            _consumer = await _natsJsContext.CreateOrUpdateConsumerAsync(Normalize(Address), config);
             return _consumer;
         }
         return _consumer;
@@ -128,6 +123,7 @@ public class JetStreamTransport : AbstractRebusTransport, IInitializable, IDispo
 
         try
         {
+            _natsConnection.DisposeAsync().GetAwaiter().GetResult();
         }
         finally
         {
@@ -135,5 +131,5 @@ public class JetStreamTransport : AbstractRebusTransport, IInitializable, IDispo
         }
     }
 
-    private string Normalize(string queue) => queue.Replace('.', '_');
+    private static string Normalize(string queue) => queue.Replace('.', '_');
 }

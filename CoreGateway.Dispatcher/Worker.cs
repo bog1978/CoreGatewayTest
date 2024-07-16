@@ -85,7 +85,7 @@ namespace CoreGateway.Dispatcher
                 case null:
                     var newFile = await _dataAccess.InsertFileToProcess(fileName, stoppingToken);
                     await _bus.Send(new FileToProcessMessage(newFile.Id, fileName));
-                    _logger.InterpolatedDebug($"Отправка новой задачи {newFile.Id:cg_taskId} на обработку файла [{fileName:cg_fileName}]");
+                    _logger.InterpolatedInformation($"Отправка новой задачи {newFile.Id:cg_taskId} на обработку файла [{fileName:cg_fileName}]");
                     break;
                 // Файл уже обработан. Наверно нужно сделать повторную отправку.
                 case { Status: FileStatus.Ok }:
@@ -102,7 +102,7 @@ namespace CoreGateway.Dispatcher
                     break;
                 case { Status: FileStatus.Waiting }:
                     // Ожидаем исполнения задачи.
-                    _logger.InterpolatedDebug($"Задача {existingFile.Id:cg_taskId} на обработку файла {fileName:cg_fileName} уже отправлена в очередь.");
+                    _logger.InterpolatedInformation($"Задача {existingFile.Id:cg_taskId} на обработку файла {fileName:cg_fileName} уже отправлена в очередь.");
                     break;
             }
         }

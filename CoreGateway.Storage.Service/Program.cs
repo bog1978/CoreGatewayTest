@@ -1,5 +1,6 @@
 using CoreGateway.Dispatcher.DataAccess;
 using CoreGateway.Messages;
+using Microsoft.Extensions.Logging.Console;
 using Npgsql;
 using OpenTelemetry.Logs;
 using OpenTelemetry.Metrics;
@@ -22,6 +23,11 @@ namespace CoreGateway.Storage.Service
                 throw new InvalidOperationException($"Не найдена секция конфигурации: [{nameof(StorageOptions)}].");
             builder.Services.AddOptions<StorageOptions>().Bind(section);
 
+            builder.Services.AddLogging(l => l.AddSimpleConsole(o =>
+            {
+                o.SingleLine = true;
+                o.ColorBehavior = LoggerColorBehavior.Enabled;
+            }));
             builder.Services.AddControllers();
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();

@@ -1,6 +1,7 @@
 using CoreGateway.Dispatcher.DataAccess;
 using CoreGateway.Dispatcher.Handlers;
 using CoreGateway.Messages;
+using Microsoft.Extensions.Logging.Console;
 using Microsoft.Extensions.Options;
 using Npgsql;
 using OpenTelemetry.Logs;
@@ -29,7 +30,11 @@ namespace CoreGateway.Dispatcher
                     throw new InvalidOperationException($"Не найдена секция конфигурации: [{nameof(DispatcherOptions)}].");
                 services.AddOptions<DispatcherOptions>().Bind(section);
 
-                services.AddLogging(l => l.AddConsole());
+                services.AddLogging(l => l.AddSimpleConsole(o =>
+                {
+                    o.SingleLine = true;
+                    o.ColorBehavior = LoggerColorBehavior.Enabled;
+                }));
                 services.AddHostedService<Worker>();
                 services.AddRebus(ConfigureRebus);
                 services.AddTransient<IHandleMessages<FileProcessedMessage>, FileProcessedHandler>();
