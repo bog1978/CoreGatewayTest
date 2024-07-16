@@ -46,8 +46,9 @@ namespace CoreGateway.Dispatcher
                 .Transport(transport =>
                 {
                     transport
-                        .UseRabbitMq(dispatcherOptions.RabbitConnectionString, dispatcherOptions.DispatcherQueueName)
-                        .PriorityQueue(5);
+                        .UseJetStream(
+                            new JetStreamTransportOptions { },
+                            dispatcherOptions.DispatcherQueueName);
                 })
                 .Routing(router =>
                 {
@@ -58,7 +59,7 @@ namespace CoreGateway.Dispatcher
                 .Options(options =>
                 {
                     options.SetBusName($"{serviceName}.Bus");
-                    options.SetMaxParallelism(12);
+                    options.SetMaxParallelism(1);
                     options.RetryStrategy(
                         errorQueueName: $"{dispatcherOptions.DispatcherQueueName}_error",
                         maxDeliveryAttempts: 3);

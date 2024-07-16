@@ -21,12 +21,12 @@
 		<PackageReference Include="OpenTelemetry.Instrumentation.Runtime" Version="1.9.0" />
 		<PackageReference Include="Rebus.Microsoft.Extensions.Logging" Version="5.0.0" />
 		<PackageReference Include="Rebus.OpenTelemetry" Version="1.0.0" />
-		<PackageReference Include="Rebus.RabbitMq" Version="9.3.6" />
 		<PackageReference Include="Rebus.ServiceProvider" Version="10.1.2" />
 	</ItemGroup>
 
 	<ItemGroup>
 		<ProjectReference Include="..\CoreGateway.Messages\CoreGateway.Messages.csproj" />
+		<ProjectReference Include="..\Rebus.NatsJetStream\Rebus.NatsJetStream.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>

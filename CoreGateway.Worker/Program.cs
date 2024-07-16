@@ -40,13 +40,14 @@ namespace CoreGateway.Worker
                 .Transport(transport =>
                 {
                     transport
-                        .UseRabbitMq(workerOptions.RabbitConnectionString, workerOptions.WorkerQueueName)
-                        .PriorityQueue(5);
+                        .UseJetStream(
+                            new JetStreamTransportOptions { },
+                            workerOptions.WorkerQueueName);
                 })
                 .Options(options =>
                 {
                     options.SetBusName($"{serviceName}.Bus");
-                    options.SetMaxParallelism(12);
+                    options.SetMaxParallelism(1);
                     options.RetryStrategy(
                         errorQueueName: $"{workerOptions.WorkerQueueName}_error",
                         maxDeliveryAttempts: 3);

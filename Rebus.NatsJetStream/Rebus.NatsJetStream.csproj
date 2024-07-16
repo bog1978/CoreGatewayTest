@@ -1,0 +1,15 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>net6.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<RootNamespace>Rebus</RootNamespace>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="NATS.Extensions.Microsoft.DependencyInjection" Version="2.3.2" />
+		<PackageReference Include="Rebus" Version="8.4.3" />
+	</ItemGroup>
+
+</Project>
