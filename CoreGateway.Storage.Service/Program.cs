@@ -61,6 +61,7 @@ namespace CoreGateway.Storage.Service
                     .AddRuntimeInstrumentation()
                     .AddHttpClientInstrumentation()
                     .AddProcessInstrumentation()
+                    .AddCoreGatewayInstrumentation()
                     //.AddConsoleExporter()
                     .AddOtlpExporter());
             services.AddLogging(builder =>
