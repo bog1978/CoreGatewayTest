@@ -1,4 +1,6 @@
+using System.Diagnostics;
 using CoreGateway.Dispatcher.DataAccess;
+using CoreGateway.Messages;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CoreGateway.Storage.Service.Controllers
@@ -35,11 +37,22 @@ namespace CoreGateway.Storage.Service.Controllers
                 return new BadRequestObjectResult(
                     new ArgumentNullException(nameof(data)));
 
+            using var activity = CoreGatewayTraceing.CoreGatewayActivity
+                .StartActivity(ActivityKind.Consumer, name: "ProcessNewFile.StoreData")
+                ?.CheckBaggage(_logger);
+
             var ms = new MemoryStream();
             using var stream = data.OpenReadStream();
             await stream.CopyToAsync(ms, 1024);
 
             var result = await _dataAccess.InsertFile(Guid.NewGuid(), data.FileName, ms.ToArray(), CancellationToken.None);
+
+            CoreGatewayTraceing.StoredDataCounter.Add(1);
+            CoreGatewayTraceing.StoredDataSize.Record(ms.Length);
+            CoreGatewayTraceing.StoredDataSizeTotal.Add(ms.Length);
+
+            _logger.InterpolatedInformation($"Файл {data.FileName:cg_fileName} ({data.Length:cg_fileSize} байт) сохранен в БД.");
+
             return result.Id;
         }
     }

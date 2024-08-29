@@ -1,4 +1,4 @@
-using CoreGateway.Dispatcher.DataAccess;
+п»їusing CoreGateway.Dispatcher.DataAccess;
 using CoreGateway.Messages;
 using Microsoft.Extensions.Logging.Console;
 using Npgsql;
@@ -17,10 +17,10 @@ namespace CoreGateway.Storage.Service
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            // Регистрация настроек.
+            // Р РµРіРёСЃС‚СЂР°С†РёСЏ РЅР°СЃС‚СЂРѕРµРє.
             var section = builder.Configuration.GetRequiredSection(nameof(StorageOptions));
             if (section == null)
-                throw new InvalidOperationException($"Не найдена секция конфигурации: [{nameof(StorageOptions)}].");
+                throw new InvalidOperationException($"РќРµ РЅР°Р№РґРµРЅР° СЃРµРєС†РёСЏ РєРѕРЅС„РёРіСѓСЂР°С†РёРё: [{nameof(StorageOptions)}].");
             builder.Services.AddOptions<StorageOptions>().Bind(section);
 
             builder.Services.AddLogging(l => l.AddSimpleConsole(o =>
@@ -67,6 +67,7 @@ namespace CoreGateway.Storage.Service
                     .AddRuntimeInstrumentation()
                     .AddHttpClientInstrumentation()
                     .AddProcessInstrumentation()
+                    .AddCoreGatewayInstrumentation()
                     //.AddConsoleExporter()
                     .AddOtlpExporter());
             services.AddLogging(builder =>

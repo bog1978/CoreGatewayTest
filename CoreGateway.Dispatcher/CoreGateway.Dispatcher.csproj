@@ -9,7 +9,6 @@
 
 	<ItemGroup>
 		<PackageReference Include="Evolve" Version="3.2.0" />
-		<PackageReference Include="InterpolatedLogging.Microsoft.Extensions.Logging" Version="5.1.0" />
 		<PackageReference Include="linq2db" Version="5.4.1" />
 		<PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.0" />
 		<PackageReference Include="Npgsql.OpenTelemetry" Version="8.0.3" />

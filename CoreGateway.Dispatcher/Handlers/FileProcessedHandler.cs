@@ -25,7 +25,8 @@ namespace CoreGateway.Dispatcher.Handlers
         public async Task Handle(FileProcessedMessage message)
         {
             using var activity = CoreGatewayTraceing.CoreGatewayActivity
-                .StartActivity(ActivityKind.Consumer, name: nameof(FileProcessedHandler));
+                .StartActivity(ActivityKind.Consumer, name: "ProcessNewFile.End")
+                ?.CheckBaggage(_logger);
             try
             {
                 switch (message)
