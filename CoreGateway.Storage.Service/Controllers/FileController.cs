@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using CoreGateway.Dispatcher.DataAccess;
 using CoreGateway.Messages;
 using Microsoft.AspNetCore.Mvc;
@@ -35,6 +36,10 @@ namespace CoreGateway.Storage.Service.Controllers
             if (data == null)
                 return new BadRequestObjectResult(
                     new ArgumentNullException(nameof(data)));
+
+            using var activity = CoreGatewayTraceing.CoreGatewayActivity
+                .StartActivity(ActivityKind.Consumer, name: "ProcessNewFile.StoreData")
+                ?.CheckBaggage(_logger);
 
             var ms = new MemoryStream();
             using var stream = data.OpenReadStream();

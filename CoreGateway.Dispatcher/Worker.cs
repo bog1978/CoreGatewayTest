@@ -52,8 +52,9 @@ namespace CoreGateway.Dispatcher
             foreach (var fileName in filesNames)
             {
                 using var activity = CoreGatewayTraceing.CoreGatewayActivity
-                    .StartActivity(ActivityKind.Producer)
-                    ?.SetTag("CoreGateway.FileName", fileName);
+                    .StartActivity(ActivityKind.Producer, name: "ProcessNewFile.Begin")
+                    ?.AddTag("CoreGateway.FileName", fileName)
+                    ?.AddBaggage(CoreGatewayTraceing.BaggageKey, "Все своё ношу с собой.");
                 try
                 {
                     await ProcessFile(serverOffset, fileName, stoppingToken);

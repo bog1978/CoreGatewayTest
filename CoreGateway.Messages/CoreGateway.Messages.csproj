@@ -7,6 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="InterpolatedLogging.Microsoft.Extensions.Logging" Version="5.1.0" />
     <PackageReference Include="OpenTelemetry.Api" Version="1.9.0" />
   </ItemGroup>
 

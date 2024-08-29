@@ -22,7 +22,8 @@ namespace CoreGateway.Worker.Handlers
         public async Task Handle(FileToProcessMessage message)
         {
             using var activity = CoreGatewayTraceing.CoreGatewayActivity
-                .StartActivity(ActivityKind.Consumer, name: nameof(FileToProcessHandler));
+                .StartActivity(ActivityKind.Consumer, name: "ProcessNewFile.DoWork")
+                ?.CheckBaggage(_logger);
             try
             {
                 var fileGuid = await SendFile(message.FilePath);
