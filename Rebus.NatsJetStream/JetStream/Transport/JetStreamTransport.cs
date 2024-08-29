@@ -1,4 +1,5 @@
-﻿using NATS.Client.Core;
+﻿using System.Text;
+using NATS.Client.Core;
 using NATS.Client.JetStream;
 using NATS.Client.JetStream.Models;
 using Rebus.Bus;
@@ -26,9 +27,16 @@ public class JetStreamTransport : AbstractRebusTransport, IInitializable, IDispo
     {
         if (rebusLoggerFactory == null)
             throw new ArgumentNullException(nameof(rebusLoggerFactory));
+
         if (asyncTaskFactory == null)
             throw new ArgumentNullException(nameof(asyncTaskFactory));
-        _natsConnection = new NatsConnection();
+
+        var natsOpts = new NatsOpts()
+        {
+            HeaderEncoding = Encoding.UTF8,
+            SubjectEncoding = Encoding.UTF8
+        };
+        _natsConnection = new NatsConnection(natsOpts);
         _natsJsContext = new NatsJSContext(_natsConnection);
         _rebusTime = rebusTime ?? throw new ArgumentNullException(nameof(rebusTime));
         _log = rebusLoggerFactory.GetLogger<JetStreamTransport>();
