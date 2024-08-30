@@ -22,13 +22,12 @@ namespace CoreGateway.Dispatcher
             .ConfigureServices((ctx, services) =>
             {
                 // Регистрация настроек.
-                var section = ctx.Configuration.GetRequiredSection(nameof(DispatcherOptions));
-                if (section == null)
-                    throw new InvalidOperationException($"Не найдена секция конфигурации: [{nameof(DispatcherOptions)}].");
-                services.AddOptions<DispatcherOptions>().Bind(section);
+                services.AddOptions<DispatcherOptions>().Bind(
+                    ctx.Configuration.GetRequiredSection(nameof(DispatcherOptions)));
 
                 services.AddLogging(l => l.AddConsole());
                 services.AddHostedService<Worker>();
+                services.AddRebusOptions(ctx.Configuration);
                 services.AddRebus(ConfigureRebus);
                 services.AddTransient<IHandleMessages<FileProcessedMessage>, FileProcessedHandler>();
                 services.AddSingleton<IDispatcherDataAccess, DispatcherDataAccess>();
@@ -39,11 +38,11 @@ namespace CoreGateway.Dispatcher
 
         private static RebusConfigurer ConfigureRebus(RebusConfigurer configurer, IServiceProvider services)
         {
-            var dispatcherOptions = services.GetRequiredService<IOptions<DispatcherOptions>>().Value;
+            var rebusOptions = services.GetRequiredService<IOptions<RebusOptions>>().Value;
             return configurer
-                .Transport(transport => transport.ConfigureRebusTransport(dispatcherOptions))
-                .Routing(router => router.ConfigureRebusRouting(dispatcherOptions))
-                .Options(options => options.ConfigureRebusOptions(dispatcherOptions, serviceName));
+                .Transport(transport => transport.ConfigureRebusTransport(rebusOptions))
+                .Routing(router => router.ConfigureRebusRouting(rebusOptions))
+                .Options(options => options.ConfigureRebusOptions(rebusOptions, serviceName));
         }
 
         private static IServiceCollection ConfigureOTel(this IServiceCollection services)

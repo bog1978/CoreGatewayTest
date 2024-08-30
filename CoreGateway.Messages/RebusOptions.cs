@@ -1,6 +1,6 @@
 ﻿namespace CoreGateway.Messages
 {
-    public abstract class RebusOptions
+    public class RebusOptions
     {
         /// <summary>
         /// Строка подключения к брокеру сообщений (например RabbitMQ).

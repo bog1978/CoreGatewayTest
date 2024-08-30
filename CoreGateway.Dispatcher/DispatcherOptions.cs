@@ -2,7 +2,7 @@
 
 namespace CoreGateway.Dispatcher
 {
-    internal class DispatcherOptions : RebusOptions
+    internal class DispatcherOptions
     {
         /// <summary>
         /// Строка подключение к БД, в которой хранятся все созданные задачи.

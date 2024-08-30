@@ -19,11 +19,8 @@ namespace CoreGateway.Worker
             .CreateDefaultBuilder(args)
             .ConfigureServices((ctx, services) =>
             {
-                // Регистрация настроек.
-                var section = ctx.Configuration.GetRequiredSection(nameof(WorkerOptions));
-                services.AddOptions<WorkerOptions>().Bind(section);
-
                 services.AddLogging(l => l.AddConsole());
+                services.AddRebusOptions(ctx.Configuration);
                 services.AddRebus(ConfigureRebus);
                 services.AddTransient<IHandleMessages<FileToProcessMessage>, FileToProcessHandler>();
                 services.ConfigureOTel();
@@ -34,10 +31,11 @@ namespace CoreGateway.Worker
 
         private static RebusConfigurer ConfigureRebus(RebusConfigurer configurer, IServiceProvider services)
         {
-            var workerOptions = services.GetRequiredService<IOptions<WorkerOptions>>().Value;
+            var rebusOptions = services.GetRequiredService<IOptions<RebusOptions>>().Value;
             return configurer
-                .Transport(transport => transport.ConfigureRebusTransport(workerOptions))
-                .Options(options => options.ConfigureRebusOptions(workerOptions, serviceName));
+                .Transport(transport => transport.ConfigureRebusTransport(rebusOptions))
+                .Routing(router => router.ConfigureRebusRouting(rebusOptions))
+                .Options(options => options.ConfigureRebusOptions(rebusOptions, serviceName));
         }
 
         private static IServiceCollection ConfigureOTel(this IServiceCollection services)

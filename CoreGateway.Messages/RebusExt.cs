@@ -1,4 +1,6 @@
-﻿using Rebus.Config;
+﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Rebus.Config;
 using Rebus.Retry.Simple;
 using Rebus.Routing;
 using Rebus.Routing.TypeBased;
@@ -39,6 +41,13 @@ namespace CoreGateway.Messages
                 errorQueueName: $"{rebusOptions.InputQueueName}_error",
                 maxDeliveryAttempts: 3);
             options.EnableDiagnosticSources();
+        }
+
+        public static IServiceCollection AddRebusOptions(this IServiceCollection services, IConfiguration configuration)
+        {
+            services.AddOptions<RebusOptions>().Bind(
+                configuration.GetRequiredSection(nameof(RebusOptions)));
+            return services;
         }
     }
 }
