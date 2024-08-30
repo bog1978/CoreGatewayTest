@@ -9,6 +9,7 @@
   <ItemGroup>
     <PackageReference Include="InterpolatedLogging.Microsoft.Extensions.Logging" Version="5.1.0" />
     <PackageReference Include="OpenTelemetry.Api" Version="1.9.0" />
+    <PackageReference Include="Rebus.OpenTelemetry" Version="1.0.0" />
     <PackageReference Include="Rebus.RabbitMq" Version="9.3.6" />
   </ItemGroup>
 

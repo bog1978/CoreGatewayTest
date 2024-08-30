@@ -2,7 +2,7 @@
 
 namespace CoreGateway.Worker
 {
-    internal class WorkerOptions : BaseRebusOptions
+    internal class WorkerOptions : RebusOptions
     {
     }
 }

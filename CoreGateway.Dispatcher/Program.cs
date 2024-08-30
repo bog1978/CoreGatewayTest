@@ -10,8 +10,6 @@ using OpenTelemetry.Trace;
 using Rebus.Config;
 using Rebus.Handlers;
 using Rebus.OpenTelemetry.Configuration;
-using Rebus.Retry.Simple;
-using Rebus.Routing.TypeBased;
 
 namespace CoreGateway.Dispatcher
 {
@@ -44,21 +42,8 @@ namespace CoreGateway.Dispatcher
             var dispatcherOptions = services.GetRequiredService<IOptions<DispatcherOptions>>().Value;
             return configurer
                 .Transport(transport => transport.ConfigureRebusTransport(dispatcherOptions))
-                .Routing(router =>
-                {
-                    router
-                        .TypeBased()
-                        .Map<FileToProcessMessage>(dispatcherOptions.WorkerQueueName);
-                })
-                .Options(options =>
-                {
-                    options.SetBusName($"{serviceName}.Bus");
-                    options.SetMaxParallelism(dispatcherOptions.MaxParallelism);
-                    options.RetryStrategy(
-                        errorQueueName: $"{dispatcherOptions.InputQueueName}_error",
-                        maxDeliveryAttempts: 3);
-                    options.EnableDiagnosticSources();
-                });
+                .Routing(router => router.ConfigureRebusRouting(dispatcherOptions))
+                .Options(options => options.ConfigureRebusOptions(dispatcherOptions, serviceName));
         }
 
         private static IServiceCollection ConfigureOTel(this IServiceCollection services)

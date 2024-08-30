@@ -2,17 +2,12 @@
 
 namespace CoreGateway.Dispatcher
 {
-    internal class DispatcherOptions : BaseRebusOptions
+    internal class DispatcherOptions : RebusOptions
     {
         /// <summary>
         /// Строка подключение к БД, в которой хранятся все созданные задачи.
         /// </summary>
         public string StorageConnectionString { get; set; } = string.Empty;
-
-        /// <summary>
-        /// Очередь входящих сообщений воркера.
-        /// </summary>
-        public string WorkerQueueName { get; set; } = string.Empty;
 
         /// <summary>
         /// Каталог, из которого вычитываются файлы для обработки

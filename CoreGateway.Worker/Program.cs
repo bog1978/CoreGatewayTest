@@ -8,7 +8,6 @@ using OpenTelemetry.Trace;
 using Rebus.Config;
 using Rebus.Handlers;
 using Rebus.OpenTelemetry.Configuration;
-using Rebus.Retry.Simple;
 
 namespace CoreGateway.Worker
 {
@@ -38,15 +37,7 @@ namespace CoreGateway.Worker
             var workerOptions = services.GetRequiredService<IOptions<WorkerOptions>>().Value;
             return configurer
                 .Transport(transport => transport.ConfigureRebusTransport(workerOptions))
-                .Options(options =>
-                {
-                    options.SetBusName($"{serviceName}.Bus");
-                    options.SetMaxParallelism(workerOptions.MaxParallelism);
-                    options.RetryStrategy(
-                        errorQueueName: $"{workerOptions.InputQueueName}_error",
-                        maxDeliveryAttempts: 3);
-                    options.EnableDiagnosticSources();
-                });
+                .Options(options => options.ConfigureRebusOptions(workerOptions, serviceName));
         }
 
         private static IServiceCollection ConfigureOTel(this IServiceCollection services)
