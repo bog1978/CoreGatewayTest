@@ -33,8 +33,10 @@ public class JetStreamTransport : AbstractRebusTransport, IInitializable, IDispo
 
         var natsOpts = new NatsOpts()
         {
+            Url = options.Url ?? throw new NullReferenceException("Свойство Url не может быть null."),
             HeaderEncoding = Encoding.UTF8,
             SubjectEncoding = Encoding.UTF8
+
         };
         _natsConnection = new NatsConnection(natsOpts);
         _natsJsContext = new NatsJSContext(_natsConnection);

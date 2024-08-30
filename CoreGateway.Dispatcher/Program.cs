@@ -43,12 +43,7 @@ namespace CoreGateway.Dispatcher
         {
             var dispatcherOptions = services.GetRequiredService<IOptions<DispatcherOptions>>().Value;
             return configurer
-                .Transport(transport =>
-                {
-                    transport
-                        .UseRabbitMq(dispatcherOptions.RabbitConnectionString, dispatcherOptions.DispatcherQueueName)
-                        .PriorityQueue(5);
-                })
+                .Transport(transport => transport.ConfigureRebusTransport(dispatcherOptions))
                 .Routing(router =>
                 {
                     router
@@ -58,9 +53,9 @@ namespace CoreGateway.Dispatcher
                 .Options(options =>
                 {
                     options.SetBusName($"{serviceName}.Bus");
-                    options.SetMaxParallelism(12);
+                    options.SetMaxParallelism(dispatcherOptions.MaxParallelism);
                     options.RetryStrategy(
-                        errorQueueName: $"{dispatcherOptions.DispatcherQueueName}_error",
+                        errorQueueName: $"{dispatcherOptions.InputQueueName}_error",
                         maxDeliveryAttempts: 3);
                     options.EnableDiagnosticSources();
                 });

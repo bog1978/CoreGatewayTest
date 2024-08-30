@@ -1,8 +1,8 @@
-﻿namespace CoreGateway.Worker
+﻿using CoreGateway.Messages;
+
+namespace CoreGateway.Worker
 {
-    internal class WorkerOptions
+    internal class WorkerOptions : BaseRebusOptions
     {
-        public string RabbitConnectionString { get; set; } = "";
-        public string WorkerQueueName { get; set; } = "";
     }
 }

@@ -1,21 +1,13 @@
-﻿namespace CoreGateway.Dispatcher
+﻿using CoreGateway.Messages;
+
+namespace CoreGateway.Dispatcher
 {
-    internal class DispatcherOptions
+    internal class DispatcherOptions : BaseRebusOptions
     {
         /// <summary>
         /// Строка подключение к БД, в которой хранятся все созданные задачи.
         /// </summary>
         public string StorageConnectionString { get; set; } = string.Empty;
-
-        /// <summary>
-        /// Строка подключения к брокеру сообщений (например RabbitMQ).
-        /// </summary>
-        public string RabbitConnectionString { get; set; } = string.Empty;
-
-        /// <summary>
-        /// Очередь входящих сообщений диспетчера.
-        /// </summary>
-        public string DispatcherQueueName { get; set; } = string.Empty;
 
         /// <summary>
         /// Очередь входящих сообщений воркера.

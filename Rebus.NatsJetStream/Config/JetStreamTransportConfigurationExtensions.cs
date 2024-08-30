@@ -11,9 +11,14 @@ public static class JetStreamTransportConfigurationExtensions
 {
     public static JetStreamTransportOptions UseJetStream(
         this StandardConfigurer<ITransport> configurer,
-        JetStreamTransportOptions transportOptions,
-        string inputQueueName) =>
-        Configure(
+        string connectionString,
+        string inputQueueName)
+    {
+        var transportOptions = new JetStreamTransportOptions
+        {
+            Url = connectionString
+        };
+        return Configure(
             configurer,
             (context, inputQueue) => new JetStreamTransport(
                 context.Get<IRebusLoggerFactory>(),
@@ -23,11 +28,17 @@ public static class JetStreamTransportConfigurationExtensions
                 transportOptions),
             transportOptions)
             .ReadFrom(inputQueueName);
+    }
 
     public static JetStreamTransportOptions UseJetStreamAsOneWayClient(
         this StandardConfigurer<ITransport> configurer,
-        JetStreamTransportOptions transportOptions) =>
-        Configure(
+        string connectionString)
+    {
+        var transportOptions = new JetStreamTransportOptions
+        {
+            Url = connectionString
+        };
+        return Configure(
             configurer,
             (context, inputQueue) => new JetStreamTransport(
                 context.Get<IRebusLoggerFactory>(),
@@ -38,6 +49,7 @@ public static class JetStreamTransportConfigurationExtensions
             transportOptions
             )
             .AsOneWayClient();
+    }
 
     delegate JetStreamTransport TransportFactoryDelegate(IResolutionContext context, string inputQueueName);
 

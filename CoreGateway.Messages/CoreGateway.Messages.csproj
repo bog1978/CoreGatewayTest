@@ -9,6 +9,12 @@
   <ItemGroup>
     <PackageReference Include="InterpolatedLogging.Microsoft.Extensions.Logging" Version="5.1.0" />
     <PackageReference Include="OpenTelemetry.Api" Version="1.9.0" />
+    <PackageReference Include="Rebus" Version="8.4.3" />
+    <PackageReference Include="Rebus.RabbitMq" Version="9.3.6" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Rebus.NatsJetStream\Rebus.NatsJetStream.csproj" />
   </ItemGroup>
 
 </Project>

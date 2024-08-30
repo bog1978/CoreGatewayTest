@@ -37,18 +37,13 @@ namespace CoreGateway.Worker
         {
             var workerOptions = services.GetRequiredService<IOptions<WorkerOptions>>().Value;
             return configurer
-                .Transport(transport =>
-                {
-                    transport
-                        .UseRabbitMq(workerOptions.RabbitConnectionString, workerOptions.WorkerQueueName)
-                        .PriorityQueue(5);
-                })
+                .Transport(transport => transport.ConfigureRebusTransport(workerOptions))
                 .Options(options =>
                 {
                     options.SetBusName($"{serviceName}.Bus");
-                    options.SetMaxParallelism(12);
+                    options.SetMaxParallelism(workerOptions.MaxParallelism);
                     options.RetryStrategy(
-                        errorQueueName: $"{workerOptions.WorkerQueueName}_error",
+                        errorQueueName: $"{workerOptions.InputQueueName}_error",
                         maxDeliveryAttempts: 3);
                     options.EnableDiagnosticSources();
                 });

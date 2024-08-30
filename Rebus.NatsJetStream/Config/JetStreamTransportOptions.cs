@@ -2,7 +2,9 @@
 
 public class JetStreamTransportOptions
 {
-    public string InputQueueName { get; internal set; }
+    public string? Url { get; set; }
+
+    public string? InputQueueName { get; internal set; }
 
     internal bool IsOneWayClient => InputQueueName == null;
 }
