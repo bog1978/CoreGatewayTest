@@ -29,7 +29,7 @@ namespace CoreGateway.Worker.Handlers
                 var fileGuid = await SendFile(message.FilePath);
                 File.Delete(message.FilePath);
                 await _bus.Reply(new FileProcessedMessage(message.MessageId, fileGuid, null));
-                _logger.InterpolatedDebug($"Задача {message.MessageId:cg_taskId} выполнена. Файл обработан: {message.FilePath:cg_fileName}.");
+                _logger.InterpolatedInformation($"Задача {message.MessageId:cg_taskId} выполнена. Файл обработан: {message.FilePath:cg_fileName}.");
                 activity?.SetStatus(ActivityStatusCode.Ok);
             }
             catch (Exception ex)

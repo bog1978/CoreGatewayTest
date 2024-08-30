@@ -26,6 +26,7 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\CoreGateway.Messages\CoreGateway.Messages.csproj" />
+		<ProjectReference Include="..\Rebus.NatsJetStream\Rebus.NatsJetStream.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>

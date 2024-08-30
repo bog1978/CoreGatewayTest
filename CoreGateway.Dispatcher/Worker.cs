@@ -1,4 +1,4 @@
-using System.Diagnostics;
+п»їusing System.Diagnostics;
 using CoreGateway.Dispatcher.DataAccess;
 using CoreGateway.Dispatcher.DbModel;
 using CoreGateway.Messages;
@@ -42,7 +42,7 @@ namespace CoreGateway.Dispatcher
                 MaxRecursionDepth = 4,
             };
 
-            // Если файлов нет, в БД не лезем, чтобы не плодить трэйсы.
+            // Р•СЃР»Рё С„Р°Р№Р»РѕРІ РЅРµС‚, РІ Р‘Р” РЅРµ Р»РµР·РµРј, С‡С‚РѕР±С‹ РЅРµ РїР»РѕРґРёС‚СЊ С‚СЂСЌР№СЃС‹.
             if (!Directory.EnumerateFiles(_options.ListenDirectory, _options.FileFilter, eo).Any())
                 return;
 
@@ -54,7 +54,7 @@ namespace CoreGateway.Dispatcher
                 using var activity = CoreGatewayTraceing.CoreGatewayActivity
                     .StartActivity(ActivityKind.Producer, name: "ProcessNewFile.Begin")
                     ?.AddTag("CoreGateway.FileName", fileName)
-                    ?.AddBaggage(CoreGatewayTraceing.BaggageKey, "Все своё ношу с собой.");
+                    ?.AddBaggage(CoreGatewayTraceing.BaggageKey, "Р’СЃРµ СЃРІРѕС‘ РЅРѕС€Сѓ СЃ СЃРѕР±РѕР№.");
                 try
                 {
                     await ProcessFile(serverOffset, fileName, stoppingToken);
@@ -75,35 +75,35 @@ namespace CoreGateway.Dispatcher
 
             var existingFile = await _dataAccess.FindFileToProcess(fileName, stoppingToken);
 
-            // Если файл отложен до момента в будущем, пока пропускаем его.
+            // Р•СЃР»Рё С„Р°Р№Р» РѕС‚Р»РѕР¶РµРЅ РґРѕ РјРѕРјРµРЅС‚Р° РІ Р±СѓРґСѓС‰РµРј, РїРѕРєР° РїСЂРѕРїСѓСЃРєР°РµРј РµРіРѕ.
             var serverNow = DateTime.UtcNow + serverOffset;
             if (existingFile != null && existingFile.TryAfter > serverNow)
                 return;
 
             switch (existingFile)
             {
-                // Новый файл.
+                // РќРѕРІС‹Р№ С„Р°Р№Р».
                 case null:
                     var newFile = await _dataAccess.InsertFileToProcess(fileName, stoppingToken);
                     await _bus.Send(new FileToProcessMessage(newFile.Id, fileName));
-                    _logger.InterpolatedDebug($"Отправка новой задачи {newFile.Id:cg_taskId} на обработку файла [{fileName:cg_fileName}]");
+                    _logger.InterpolatedInformation($"РћС‚РїСЂР°РІРєР° РЅРѕРІРѕР№ Р·Р°РґР°С‡Рё {newFile.Id:cg_taskId} РЅР° РѕР±СЂР°Р±РѕС‚РєСѓ С„Р°Р№Р»Р° [{fileName:cg_fileName}]");
                     break;
-                // Файл уже обработан. Наверно нужно сделать повторную отправку.
+                // Р¤Р°Р№Р» СѓР¶Рµ РѕР±СЂР°Р±РѕС‚Р°РЅ. РќР°РІРµСЂРЅРѕ РЅСѓР¶РЅРѕ СЃРґРµР»Р°С‚СЊ РїРѕРІС‚РѕСЂРЅСѓСЋ РѕС‚РїСЂР°РІРєСѓ.
                 case { Status: FileStatus.Ok }:
-                    _logger.InterpolatedWarning($"Файл {fileName:cg_fileName} числится как обработанный, но не удален. Это какой-то косяк.");
+                    _logger.InterpolatedWarning($"Р¤Р°Р№Р» {fileName:cg_fileName} С‡РёСЃР»РёС‚СЃСЏ РєР°Рє РѕР±СЂР°Р±РѕС‚Р°РЅРЅС‹Р№, РЅРѕ РЅРµ СѓРґР°Р»РµРЅ. Р­С‚Рѕ РєР°РєРѕР№-С‚Рѕ РєРѕСЃСЏРє.");
                     break;
-                // В процессе обработки файла возникла ошибка.
+                // Р’ РїСЂРѕС†РµСЃСЃРµ РѕР±СЂР°Р±РѕС‚РєРё С„Р°Р№Р»Р° РІРѕР·РЅРёРєР»Р° РѕС€РёР±РєР°.
                 case { Status: FileStatus.Error, TryCount: < 25 }:
                     var resentFile = await _dataAccess.ResendFileToProcess(existingFile.Id);
                     await _bus.Send(new FileToProcessMessage(resentFile.Id, fileName));
-                    _logger.InterpolatedWarning($"Повторная отправка задачи {resentFile.Id:cg_taskId} на обработку файла {fileName:cg_fileName} (попытка {resentFile.TryCount:cg_tryCount}).");
+                    _logger.InterpolatedWarning($"РџРѕРІС‚РѕСЂРЅР°СЏ РѕС‚РїСЂР°РІРєР° Р·Р°РґР°С‡Рё {resentFile.Id:cg_taskId} РЅР° РѕР±СЂР°Р±РѕС‚РєСѓ С„Р°Р№Р»Р° {fileName:cg_fileName} (РїРѕРїС‹С‚РєР° {resentFile.TryCount:cg_tryCount}).");
                     break;
                 case { Status: FileStatus.Error }:
-                    _logger.InterpolatedError($"Лимит попыток выполнения задачи {existingFile.Id:cg_taskId} на обработку файла {fileName:cg_fileName} исчерпан (попытка {existingFile.TryCount:cg_tryCount}).");
+                    _logger.InterpolatedError($"Р›РёРјРёС‚ РїРѕРїС‹С‚РѕРє РІС‹РїРѕР»РЅРµРЅРёСЏ Р·Р°РґР°С‡Рё {existingFile.Id:cg_taskId} РЅР° РѕР±СЂР°Р±РѕС‚РєСѓ С„Р°Р№Р»Р° {fileName:cg_fileName} РёСЃС‡РµСЂРїР°РЅ (РїРѕРїС‹С‚РєР° {existingFile.TryCount:cg_tryCount}).");
                     break;
                 case { Status: FileStatus.Waiting }:
-                    // Ожидаем исполнения задачи.
-                    _logger.InterpolatedDebug($"Задача {existingFile.Id:cg_taskId} на обработку файла {fileName:cg_fileName} уже отправлена в очередь.");
+                    // РћР¶РёРґР°РµРј РёСЃРїРѕР»РЅРµРЅРёСЏ Р·Р°РґР°С‡Рё.
+                    _logger.InterpolatedInformation($"Р—Р°РґР°С‡Р° {existingFile.Id:cg_taskId} РЅР° РѕР±СЂР°Р±РѕС‚РєСѓ С„Р°Р№Р»Р° {fileName:cg_fileName} СѓР¶Рµ РѕС‚РїСЂР°РІР»РµРЅР° РІ РѕС‡РµСЂРµРґСЊ.");
                     break;
             }
         }
